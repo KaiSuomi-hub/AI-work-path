@@ -47,13 +47,13 @@ The train_ds dataset is used for training the model, and the val_ds dataset is u
 ########################################################################
 ##Visualization
 ########################################################################
-plt.figure(figsize=(10, 10))
-for images, labels in train_ds.take(1):
-    for i in range(9):
-        ax = plt.subplot(3, 3, i + 1)
-        plt.imshow(np.array(images[i]).astype("uint8"))
-        plt.title(int(labels[i]))
-        plt.axis("off")
+# plt.figure(figsize=(10, 10))
+# for images, labels in train_ds.take(1):
+#     for i in range(9):
+#         ax = plt.subplot(3, 3, i + 1)
+#         plt.imshow(np.array(images[i]).astype("uint8"))
+#         plt.title(int(labels[i]))
+#         plt.axis("off")
 
 ########################################################################
 ##Data augmentation for a larger simulated dataset
@@ -63,8 +63,8 @@ Specifically, it applies a random horizontal flip and a random rotation with an 
 """
 ########################################################################
 data_augmentation_layers = [
-    layers.RandomFlip("horizontal"),
-    layers.RandomRotation(0.1),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
 ]
 # Apply `data_augmentation` to the training images.
 # We simulate a larger data set with mixing the images
@@ -74,14 +74,13 @@ def data_augmentation(images):
         images = layer(images)
     return images
 
-plt.figure(figsize=(10, 10))
-# cSpell:ignore relu downsamples Kasperi underfitting Overfitting errun Crossentropy
-for images, _ in train_ds.take(1):
-    for i in range(9):
-        augmented_images = data_augmentation(images)
-        ax = plt.subplot(3, 3, i + 1)
-        plt.imshow(np.array(augmented_images[0]).astype("uint8"))
-        plt.axis("off")
+# plt.figure(figsize=(10, 10))
+# for images, _ in train_ds.take(1):
+#     for i in range(9):
+#         augmented_images = data_augmentation(images)
+#         ax = plt.subplot(3, 3, i + 1)
+#         plt.imshow(np.array(augmented_images[0]).astype("uint8"))
+#         plt.axis("off")
 
 
 
@@ -101,14 +100,14 @@ val_ds = val_ds.prefetch(tf_data.AUTOTUNE)
 def make_model(input_shape, num_classes):
     inputs = keras.Input(shape=input_shape)
 
-    physical_devices = tf.config.list_physical_devices('GPU')
+    # physical_devices = tf.config.list_physical_devices('GPU')
     # tf.config.experimental.set_memory_growth(physical_devices[0], True)
     # tf.config.set_visible_devices(physical_devices[0], 'GPU')
     # List all physical devices that are of type 'GPU'
-    physical_devices = tf.config.list_physical_devices('GPU')
+    # physical_devices = tf.config.list_physical_devices('GPU')
 
     # If a GPU is available, this will print a list of GPU devices. If not, it will print an empty list.
-    print(physical_devices)
+    # print(physical_devices)
 
     # Entry block
     x = layers.Rescaling(1.0 / 255)(inputs)
@@ -118,7 +117,7 @@ def make_model(input_shape, num_classes):
 
     previous_block_activation = x  # Set aside residual
 
-    for size in [256, 512, 728]:
+    for size in [256, 512, 728, 1024]:
         x = layers.Activation("relu")(x)
         x = layers.SeparableConv2D(size, 3, padding="same")(x)
         x = layers.BatchNormalization()(x)
@@ -126,6 +125,8 @@ def make_model(input_shape, num_classes):
         x = layers.Activation("relu")(x)
         x = layers.SeparableConv2D(size, 3, padding="same")(x)
         x = layers.BatchNormalization()(x)
+
+
 
         x = layers.MaxPooling2D(3, strides=2, padding="same")(x)
 
@@ -142,14 +143,17 @@ def make_model(input_shape, num_classes):
 
     x = layers.GlobalAveragePooling2D()(x)
     if num_classes == 2:
+        activation = 'sigmoid'
         units = 1
     else:
+        activation = 'softmax'
         units = num_classes
 
-    x = layers.Dropout(0.25)(x)
+    x = layers.Dropout(0.5)(x)
     # We specify activation=None so as to return logits
-    outputs = layers.Dense(units, activation=None)(x)
+    outputs = layers.Dense(units, activation=activation)(x)
     return keras.Model(inputs, outputs)
+
 """
 The previous_block_activation = x line is storing the output of the current block of layers,
 which will be used later to create a residual connection.
@@ -188,7 +192,7 @@ the final layer will have one unit (since a single output can represent two clas
 number of units equal to the number of classes.
 """
 
-model = make_model(input_shape=image_size + (3,), num_classes=2)
+model = make_model(input_shape=image_size + (3,), num_classes=3)
 """
 The make_model function takes two arguments: input_shape and num_classes.
 
