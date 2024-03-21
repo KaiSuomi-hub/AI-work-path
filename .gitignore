@@ -15,9 +15,10 @@ apikey.js
 *.rar
 #don't upload builds
 */build/
-#don upload images
+#don't upload images
 *.jpg
-
+#no models
+*.keras
 #GIT
 .git/
 # Logs
